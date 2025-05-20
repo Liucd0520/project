@@ -12,14 +12,14 @@ from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.agents import Tool
 from langchain.prompts import PromptTemplate
-from models import llm_chatgpt, llm_deepseek, llm_qwen_plus
+from models import llm_chatgpt, llm_deepseek, llm_qwen_plus, llm_qwen_14b
 from typing import Union
 from typing import List
 from typing_extensions import TypedDict
 
 
-tools = [get_datetime, get_weather, web_search, get_address, get_knowledge, navigation]
-llm = llm_qwen_plus
+tools = [get_datetime, get_weather, web_search, get_city_name, get_address, get_knowledge, navigation]
+llm = llm_qwen_14b
 
 
 graph = create_react_agent(llm, tools=tools)
@@ -75,6 +75,8 @@ class Plan(BaseModel):
         description="different steps to follow, should be in sorted order"
     )
 
+# # 可使用的工具：
+#     {function}
 task_decompse_prompt = """
 # 指令：
     针对给定的目标，制定一个简单的逐步计划。
@@ -84,8 +86,6 @@ task_decompse_prompt = """
 
     注意：如果给定的目标可以直接由一个工具完成，那么不需要制定计划。
 
-# 可使用的工具：
-    {function}
 
 # 任务：
     {message}
@@ -96,14 +96,14 @@ task_decompse_prompt = """
 
 
 planner_prompt = PromptTemplate(template=task_decompse_prompt, 
-                                    input_variables=["function", "message"])
-planner = planner_prompt | llm_qwen_plus.with_structured_output(Plan)
+                                    input_variables=["message"])  # "function", 
+planner = planner_prompt | llm.with_structured_output(Plan)
 
 
 def get_plan(state: ReWOO):
     task = state["message"]
     
-    results = planner.invoke({"message": task, "function": str(tools_instructions)})
+    results = planner.invoke({"message": task, })  # "function": str(tools_instructions)
     print(results)
 
     return {"steps": results.steps}
@@ -136,7 +136,7 @@ task_summary_prompt = """
 
 summary_prompt = PromptTemplate(template=task_summary_prompt, 
                                     input_variables=["results", "message"])
-summary_chain = summary_prompt | llm_qwen_plus
+summary_chain = summary_prompt | llm 
 
 
 def get_result(state: ReWOO):

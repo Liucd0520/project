@@ -14,3 +14,9 @@ llm_qwen_plus = ChatOpenAI(model="qwen-plus",
                     api_key='sk-4e27d583808849128b07458af74724a6',
                     temperature=0,
                     )
+
+llm_qwen_14b = ChatOpenAI(model="Qwen2.5-14B",
+                    base_url='http://192.168.0.11:8011/v1',
+                    api_key='EMPTY',
+                    temperature=0,
+                    )

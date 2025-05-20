@@ -5,7 +5,8 @@ from langchain_core.tools import tool
 from typing import Literal
 import requests
 # from langchain.vectorstores import FAISS, Chroma
-from langchain.embeddings.openai import OpenAIEmbeddings
+# from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain_community.embeddings import OpenAIEmbeddings
 import pandas as pd
 from typing import Literal
 
@@ -56,7 +57,7 @@ def web_search(query):
 def get_weather(city_name: str):
     """
     当查询天气时才使用此工具.
-    输入：city_name: 城市的名称，例如：北京市，虞城县，浦东新区，如果不含有“市”、“县”等后缀，需要加上后缀。
+    输入：city_name: 城市的名称。如果不含有“市”、“县”等后缀，需要加上后缀。
     """
     # 高德天气查询API的URL
     url = "https://restapi.amap.com/v3/weather/weatherInfo"
@@ -75,12 +76,27 @@ def get_weather(city_name: str):
 
     return result
 
+@tool
+def get_city_name():
+    """查询当前所在的城市名称信息."""
+    print('**************************************************8')
+    url = "https://restapi.amap.com/v3/ip?parameters"
+    parameters = {
+        'key': '1a4460bc4e30e4ffb8db28ce0726513d',  
+    }
+    # 发送GET请求
+    response = requests.get(url, params=parameters)
+    result = response.json()
+    return result['city']
 
 
 @tool
 def get_address(location_info):
-    """当查询某个具体位置时才使用此工具."""
-    # 高德天气查询API的URL
+    """
+    当查询某个具体位置时才使用此工具.
+    location_info: 需要查询的地址信息，例如：上海市申城佳苑1期C块
+    """
+    
     url = "https://restapi.amap.com/v3/place/text?parameters"
 
     parameters = {
@@ -93,6 +109,7 @@ def get_address(location_info):
     response = requests.get(url, params=parameters)
     result = response.json()
     print(result['pois'][0])
+
     return result['pois'][0]['address']
 
 
