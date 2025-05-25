@@ -9,9 +9,20 @@ import requests
 from langchain_community.embeddings import OpenAIEmbeddings
 import pandas as pd
 from typing import Literal
-
+from langchain_community.vectorstores import FAISS
 from datetime import datetime
 from utils import get_location
+from models import embedding_openai
+from langchain.prompts import PromptTemplate
+from function_guide.prompt import prompt_function_guide
+from models import llm_qwen_14b
+# from html_transfer_md import html_converter
+from langchain_core.output_parsers import  CommaSeparatedListOutputParser
+from langchain.output_parsers import EnumOutputParser
+import pandas as pd 
+from typing import List
+import config 
+from function_guide.guide import recommand_function
 
 TAVILY_API_KEY = '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'
 
@@ -117,11 +128,11 @@ def get_address(location_info):
 @tool
 def get_knowledge(query):
     """当查询关于政策方面的知识时，调用此工具."""
-    db = Chroma(persist_directory="./db", embedding_function=embeddings,
-            )
-    docs = db.similarity_search_with_relevance_scores(query, k=3,)
+    print('进入政策查询节点 ...')
+    vector = FAISS.load_local("faiss_index", embedding_openai,  allow_dangerous_deserialization=True)
+    docs = vector.similarity_search(query, k=3,)
 
-    return [doc[0].page_content for doc in docs] 
+    return  [doc.page_content for doc in docs] 
 
 
 
@@ -146,7 +157,17 @@ def navigation(start_name: str, end_name: str,mode: Literal['driving', 'walking'
 
     return result
 
-
+@tool 
+def app_serve_function(query: str) -> List:
+    """当需要查询APP应用服务功能时，调用此工具.
+    输出为["养老机构", "居家服务", "适老改造", "助餐服务", "健康医疗", "我的", "还待开发"] 中的一个或2个功能标签
+    """
+    print('进入APP应用服务功能节点 ...')
+    # 这里可以根据query的内容来决定调用哪个具体的应用服务功能
+    function_name = recommand_function(query)
+    
+    return function_name
+    
 
 
 if __name__ == '__main__':
@@ -165,5 +186,8 @@ if __name__ == '__main__':
     
     # print(result['浦东新区'])
 
-    result = verify_api('从上海市申城佳苑1期C块到上海市申城佳苑2期B块的走路怎么走')
+    # result = verify_api('从上海市申城佳苑1期C块到上海市申城佳苑2期B块的走路怎么走')
+    # print(result)
+
+    result = get_knowledge('我今年82岁了，我能享受什么养老政策')
     print(result)

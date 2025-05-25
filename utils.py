@@ -3,6 +3,17 @@ from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
 from langchain.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
+
+
+def create_structured_chain(prompt, model, structured_data):
+
+    structured_llm = model.with_structured_output(structured_data)
+    generate_chain = prompt | structured_llm
+
+    return generate_chain
+
+
+
 def get_location(key_word):
 
     url = "https://restapi.amap.com/v3/place/text?parameters"
